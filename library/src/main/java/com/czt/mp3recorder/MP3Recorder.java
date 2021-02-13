@@ -4,13 +4,15 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import com.czt.mp3recorder.util.LameUtil;
+import com.czt.mp3recorder.util.PipedBuffer;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.logging.Logger;
 
 public class MP3Recorder {
-    private static Logger logger = Logger.getLogger(MP3Recorder.class.getName());
+    private static final Logger logger = Logger.getLogger(MP3Recorder.class.getName());
 
     //=======================AudioRecord Default Settings=======================
     private static final int DEFAULT_AUDIO_SOURCE = MediaRecorder.AudioSource.MIC;
@@ -47,7 +49,8 @@ public class MP3Recorder {
     private short[] mPCMBuffer;
     private DataEncodeThread mEncodeThread;
     private boolean mIsRecording = false;
-    private final File mRecordFile;
+    //    private final File mRecordFile;
+    private final PipedBuffer mPipedBuffer;
 
     /**
      * Default constructor. Setup recorder with default sampling rate 1 channel,
@@ -55,8 +58,20 @@ public class MP3Recorder {
      *
      * @param recordFile target file
      */
-    public MP3Recorder(File recordFile) {
-        mRecordFile = recordFile;
+    public MP3Recorder(File recordFile) throws IOException {
+        mPipedBuffer = new PipedBuffer(recordFile);
+    }
+
+    /**
+     * Default constructor. Setup recorder with default sampling rate 1 channel,
+     * 16 bits pcm
+     */
+    public MP3Recorder() throws IOException {
+        mPipedBuffer = new PipedBuffer();
+    }
+
+    public OutputStream getOutputStream() {
+        return mPipedBuffer;
     }
 
     /**
@@ -155,11 +170,12 @@ public class MP3Recorder {
     /**
      * Initialize audio recorder
      */
-    private void initAudioRecorder() throws IOException {
+    private void initAudioRecorder() {
         mBufferSize = AudioRecord.getMinBufferSize(DEFAULT_SAMPLING_RATE,
                 DEFAULT_CHANNEL_CONFIG, DEFAULT_AUDIO_FORMAT.getAudioFormat());
 
         int bytesPerFrame = DEFAULT_AUDIO_FORMAT.getBytesPerFrame();
+
         /* Get number of samples. Calculate the buffer size
          * (round up to the factor of given frame size)
          * 使能被整除，方便下面的周期性通知
@@ -190,7 +206,7 @@ public class MP3Recorder {
         LameUtil.init(DEFAULT_SAMPLING_RATE, DEFAULT_LAME_IN_CHANNEL, DEFAULT_SAMPLING_RATE, DEFAULT_LAME_MP3_BIT_RATE, DEFAULT_LAME_MP3_QUALITY);
         // Create and run thread used to encode data
         // The thread will
-        mEncodeThread = new DataEncodeThread(mRecordFile, mBufferSize);
+        mEncodeThread = new DataEncodeThread(mPipedBuffer, mBufferSize);
         mEncodeThread.start();
         mAudioRecord.setRecordPositionUpdateListener(mEncodeThread, mEncodeThread.getHandler());
         mAudioRecord.setPositionNotificationPeriod(FRAME_COUNT);

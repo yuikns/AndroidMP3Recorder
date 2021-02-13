@@ -6,10 +6,9 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import com.czt.mp3recorder.util.LameUtil;
+import com.czt.mp3recorder.util.PipedBuffer;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,7 +18,9 @@ public class DataEncodeThread extends HandlerThread implements AudioRecord.OnRec
     private StopHandler mHandler;
     private static final int PROCESS_STOP = 1;
     private final byte[] mMp3Buffer;
-    private final FileOutputStream mFileOutputStream;
+    //    private final FileOutputStream mFileOutputStream;
+//    private final OutputStream mFileOutputStream;
+    private final PipedBuffer mPipedBuffer;
 
     private static class StopHandler extends Handler {
 
@@ -48,11 +49,10 @@ public class DataEncodeThread extends HandlerThread implements AudioRecord.OnRec
      *
      * @param file       file
      * @param bufferSize bufferSize
-     * @throws FileNotFoundException file not found
      */
-    public DataEncodeThread(File file, int bufferSize) throws FileNotFoundException {
+    public DataEncodeThread(PipedBuffer buffer, int bufferSize) {
         super("DataEncodeThread");
-        this.mFileOutputStream = new FileOutputStream(file);
+        this.mPipedBuffer = buffer;
         mMp3Buffer = new byte[(int) (7200 + (bufferSize * 2 * 1.25))];
     }
 
@@ -102,7 +102,7 @@ public class DataEncodeThread extends HandlerThread implements AudioRecord.OnRec
             int encodedSize = LameUtil.encode(buffer, buffer, readSize, mMp3Buffer);
             if (encodedSize > 0) {
                 try {
-                    mFileOutputStream.write(mMp3Buffer, 0, encodedSize);
+                    mPipedBuffer.write(mMp3Buffer, 0, encodedSize);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -120,13 +120,13 @@ public class DataEncodeThread extends HandlerThread implements AudioRecord.OnRec
         final int flushResult = LameUtil.flush(mMp3Buffer);
         if (flushResult > 0) {
             try {
-                mFileOutputStream.write(mMp3Buffer, 0, flushResult);
+                mPipedBuffer.write(mMp3Buffer, 0, flushResult);
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
-                if (mFileOutputStream != null) {
+                if (mPipedBuffer != null) {
                     try {
-                        mFileOutputStream.close();
+                        mPipedBuffer.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

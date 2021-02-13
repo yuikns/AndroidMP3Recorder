@@ -16,9 +16,9 @@ public class MainActivity extends Activity {
     //    private MP3Recorder mRecorder = new MP3Recorder(new File(Environment.getExternalStorageDirectory(), "test.mp3"));
 
     private MP3Recorder mRecorder = null;
-    private Logger logger = Logger.getLogger(MainActivity.class.getName());
+    private final Logger logger = Logger.getLogger(MainActivity.class.getName());
 
-    public MP3Recorder GetMP3Recorder() {
+    public MP3Recorder GetMP3Recorder() throws IOException {
         if (mRecorder == null) {
             String cacheDir = this.getCacheDir().getAbsolutePath();
             logger.info("mRecorder using cache dir ===== " + cacheDir);
@@ -31,12 +31,16 @@ public class MainActivity extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        mRecorder = GetMP3Recorder();
+        try {
+            mRecorder = GetMP3Recorder();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
-        Button startButton = (Button) findViewById(R.id.StartButton);
+        Button startButton = findViewById(R.id.StartButton);
         startButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -48,7 +52,7 @@ public class MainActivity extends Activity {
                 }
             }
         });
-        Button stopButton = (Button) findViewById(R.id.StopButton);
+        Button stopButton = findViewById(R.id.StopButton);
         stopButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
