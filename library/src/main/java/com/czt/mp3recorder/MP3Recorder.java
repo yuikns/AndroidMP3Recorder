@@ -4,6 +4,7 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import com.czt.mp3recorder.util.LameUtil;
+import com.czt.mp3recorder.util.PipeOnBufferInListener;
 import com.czt.mp3recorder.util.PipedBuffer;
 
 import java.io.File;
@@ -72,6 +73,10 @@ public class MP3Recorder {
 
     public OutputStream getOutputStream() {
         return mPipedBuffer;
+    }
+
+    public void setOnBufferInListener(PipeOnBufferInListener listener) {
+        mPipedBuffer.setOnBufferInListener(listener);
     }
 
     /**

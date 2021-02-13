@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import com.czt.mp3recorder.MP3Recorder;
+import com.czt.mp3recorder.util.PipeOnBufferInListener;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +37,13 @@ public class MainActivity extends Activity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        mRecorder.setOnBufferInListener(new PipeOnBufferInListener() {
+            @Override
+            public void OnBufferIn(byte[] b) {
+                logger.info("mRecorder got buffer, length: " + b.length);
+            }
+        });
 
         super.onCreate(savedInstanceState);
 

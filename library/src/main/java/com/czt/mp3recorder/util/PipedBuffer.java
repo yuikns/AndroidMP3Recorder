@@ -1,10 +1,13 @@
 package com.czt.mp3recorder.util;
 
 import java.io.*;
+import java.util.Arrays;
 
 public class PipedBuffer extends OutputStream implements Closeable, Flushable {
     private final InputStream inputStream;
     private final OutputStream outputStream;
+
+    private PipeOnBufferInListener onBufferInListener = null;
 
     public PipedBuffer() throws IOException {
         PipedInputStream input = new PipedInputStream();
@@ -23,6 +26,14 @@ public class PipedBuffer extends OutputStream implements Closeable, Flushable {
         inputStream = new FileInputStream(file);
     }
 
+
+    private void triggerOnBufferInListener(byte[] b, int off, int len) {
+        PipeOnBufferInListener listener = onBufferInListener;
+        if (listener != null && len > 0) {
+            listener.OnBufferIn(Arrays.copyOfRange(b, off, off + len));
+        }
+    }
+
     /**
      * Writes the specified <code>byte</code> to the piped output stream.
      * <p>
@@ -34,6 +45,9 @@ public class PipedBuffer extends OutputStream implements Closeable, Flushable {
      */
     public void write(int b) throws IOException {
         outputStream.write(b);
+        byte[] ba = new byte[1];
+        ba[0] = (byte) b;
+        triggerOnBufferInListener(ba, 0, 1);
     }
 
     /**
@@ -50,6 +64,7 @@ public class PipedBuffer extends OutputStream implements Closeable, Flushable {
      */
     public void write(byte[] b, int off, int len) throws IOException {
         outputStream.write(b, off, len);
+        triggerOnBufferInListener(b, off, len);
     }
 
     /**
@@ -64,6 +79,7 @@ public class PipedBuffer extends OutputStream implements Closeable, Flushable {
      */
     public void write(byte[] b) throws IOException {
         outputStream.write(b);
+        triggerOnBufferInListener(b, 0, b.length);
     }
 
 
@@ -180,4 +196,9 @@ public class PipedBuffer extends OutputStream implements Closeable, Flushable {
         inputStream.close();
     }
 
+
+    public PipedBuffer setOnBufferInListener(PipeOnBufferInListener onBufferInListener) {
+        this.onBufferInListener = onBufferInListener;
+        return this;
+    }
 }
