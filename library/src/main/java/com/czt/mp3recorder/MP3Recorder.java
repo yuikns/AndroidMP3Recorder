@@ -4,6 +4,7 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import com.czt.mp3recorder.util.LameUtil;
+import com.czt.mp3recorder.util.PCMOnBufferInListener;
 import com.czt.mp3recorder.util.PipeOnBufferInListener;
 import com.czt.mp3recorder.util.PipedBuffer;
 
@@ -52,6 +53,7 @@ public class MP3Recorder {
     private boolean mIsRecording = false;
     //    private final File mRecordFile;
     private final PipedBuffer mPipedBuffer;
+    private PCMOnBufferInListener pcmOnBufferInListener = null;
 
     /**
      * Default constructor. Setup recorder with default sampling rate 1 channel,
@@ -79,6 +81,11 @@ public class MP3Recorder {
         mPipedBuffer.setOnBufferInListener(listener);
     }
 
+    public void setPCMOnBufferInListener(PCMOnBufferInListener listener) {
+        pcmOnBufferInListener = listener;
+    }
+
+
     /**
      * Start recording. Create an encoding thread. Start record from this
      * thread.
@@ -97,11 +104,19 @@ public class MP3Recorder {
             public void run() {
                 //设置线程权限
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+                PCMOnBufferInListener bufferInListener = pcmOnBufferInListener;
                 while (mIsRecording) {
                     int readSize = mAudioRecord.read(mPCMBuffer, 0, mBufferSize);
                     if (readSize > 0) {
+                        short [] bufferCache = null;
+                        if (bufferInListener != null) {
+                            bufferCache = mPCMBuffer.clone();
+                        }
                         mEncodeThread.addTask(mPCMBuffer, readSize);
                         calculateRealVolume(mPCMBuffer, readSize);
+                        if (bufferInListener != null) {
+                            bufferInListener.OnBufferIn(bufferCache, readSize);
+                        }
                     }
                 }
                 // release and finalize audioRecord
