@@ -8,7 +8,6 @@ import android.os.Message;
 import com.czt.mp3recorder.util.LameUtil;
 import com.czt.mp3recorder.util.PipedBuffer;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,8 +17,6 @@ public class DataEncodeThread extends HandlerThread implements AudioRecord.OnRec
     private StopHandler mHandler;
     private static final int PROCESS_STOP = 1;
     private final byte[] mMp3Buffer;
-    //    private final FileOutputStream mFileOutputStream;
-//    private final OutputStream mFileOutputStream;
     private final PipedBuffer mPipedBuffer;
 
     private static class StopHandler extends Handler {

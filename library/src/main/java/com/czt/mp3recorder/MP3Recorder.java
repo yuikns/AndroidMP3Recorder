@@ -104,18 +104,15 @@ public class MP3Recorder {
             public void run() {
                 //设置线程权限
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
-                PCMOnBufferInListener bufferInListener = pcmOnBufferInListener;
                 while (mIsRecording) {
                     int readSize = mAudioRecord.read(mPCMBuffer, 0, mBufferSize);
                     if (readSize > 0) {
-                        short [] bufferCache = null;
-                        if (bufferInListener != null) {
-                            bufferCache = mPCMBuffer.clone();
-                        }
                         mEncodeThread.addTask(mPCMBuffer, readSize);
                         calculateRealVolume(mPCMBuffer, readSize);
+
+                        PCMOnBufferInListener bufferInListener = pcmOnBufferInListener;
                         if (bufferInListener != null) {
-                            bufferInListener.OnBufferIn(bufferCache, readSize);
+                            bufferInListener.OnBufferIn(mPCMBuffer.clone(), readSize);
                         }
                     }
                 }
