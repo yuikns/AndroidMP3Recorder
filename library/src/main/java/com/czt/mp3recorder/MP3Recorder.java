@@ -10,7 +10,6 @@ import com.czt.mp3recorder.util.PipedBuffer;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.logging.Logger;
 
 public class MP3Recorder {
@@ -73,12 +72,33 @@ public class MP3Recorder {
         mPipedBuffer = new PipedBuffer();
     }
 
-    public OutputStream getOutputStream() {
+    /**
+     * Default constructor. Setup recorder with default sampling rate 1 channel,
+     * 16 bits pcm
+     */
+    public MP3Recorder(int bufferSize) throws IOException {
+        mPipedBuffer = new PipedBuffer(bufferSize);
+    }
+
+    public PipedBuffer getResultBuffer() {
         return mPipedBuffer;
     }
 
+    /**
+     *
+     * @param listener
+     */
     public void setOnBufferInListener(PipeOnBufferInListener listener) {
         mPipedBuffer.setOnBufferInListener(listener);
+    }
+
+    /**
+     *
+     * @param listener
+     * @param ignoreOutputBuffer
+     */
+    public void setOnBufferInListener(PipeOnBufferInListener listener, boolean ignoreOutputBuffer) {
+        mPipedBuffer.setOnBufferInListener(listener, ignoreOutputBuffer);
     }
 
     public void setPCMOnBufferInListener(PCMOnBufferInListener listener) {

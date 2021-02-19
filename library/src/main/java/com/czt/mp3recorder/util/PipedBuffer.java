@@ -6,8 +6,8 @@ import java.util.Arrays;
 public class PipedBuffer extends OutputStream implements Closeable, Flushable {
     private final InputStream inputStream;
     private final OutputStream outputStream;
-
     private PipeOnBufferInListener onBufferInListener = null;
+    private boolean ignoreOutputBuffer = false;
 
     public PipedBuffer() throws IOException {
         PipedInputStream input = new PipedInputStream();
@@ -44,7 +44,9 @@ public class PipedBuffer extends OutputStream implements Closeable, Flushable {
      *                     closed, or if an I/O error occurs.
      */
     public void write(int b) throws IOException {
-        outputStream.write(b);
+        if(!ignoreOutputBuffer) {
+            outputStream.write(b);
+        }
         byte[] ba = new byte[1];
         ba[0] = (byte) b;
         triggerOnBufferInListener(ba, 0, 1);
@@ -63,7 +65,9 @@ public class PipedBuffer extends OutputStream implements Closeable, Flushable {
      *                     closed, or if an I/O error occurs.
      */
     public void write(byte[] b, int off, int len) throws IOException {
-        outputStream.write(b, off, len);
+        if(!ignoreOutputBuffer) {
+            outputStream.write(b, off, len);
+        }
         triggerOnBufferInListener(b, off, len);
     }
 
@@ -78,7 +82,9 @@ public class PipedBuffer extends OutputStream implements Closeable, Flushable {
      * @see java.io.OutputStream#write(byte[], int, int)
      */
     public void write(byte[] b) throws IOException {
-        outputStream.write(b);
+        if(!ignoreOutputBuffer) {
+            outputStream.write(b);
+        }
         triggerOnBufferInListener(b, 0, b.length);
     }
 
@@ -197,8 +203,15 @@ public class PipedBuffer extends OutputStream implements Closeable, Flushable {
     }
 
 
-    public PipedBuffer setOnBufferInListener(PipeOnBufferInListener onBufferInListener) {
+    public PipedBuffer setOnBufferInListener(PipeOnBufferInListener onBufferInListener, boolean ignoreOutputBuffer) {
         this.onBufferInListener = onBufferInListener;
+        if (ignoreOutputBuffer) {
+            this.ignoreOutputBuffer = true;
+        }
         return this;
+    }
+
+    public PipedBuffer setOnBufferInListener(PipeOnBufferInListener onBufferInListener) {
+        return setOnBufferInListener(onBufferInListener, true);
     }
 }
