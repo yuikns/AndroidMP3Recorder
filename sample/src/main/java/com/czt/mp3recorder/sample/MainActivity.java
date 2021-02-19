@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import com.czt.mp3recorder.MP3Recorder;
+import com.czt.mp3recorder.util.PCMOnBufferInListener;
 import com.czt.mp3recorder.util.PipeOnBufferInListener;
 
 import java.io.File;
@@ -37,6 +38,13 @@ public class MainActivity extends Activity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        mRecorder.setPCMOnBufferInListener(new PCMOnBufferInListener() {
+            @Override
+            public void OnBufferIn(short[] b, int size) {
+                logger.info("mRecorder pcm buffer, length: " + b.length + ", size:" + size);
+            }
+        });
 
         mRecorder.setOnBufferInListener(new PipeOnBufferInListener() {
             @Override
